@@ -1,0 +1,32 @@
+# build
+/build/
+/cmake-build-*/
+/CMakeFiles/
+CMakeCache.txt
+
+# IDE
+.idea/
+.vscode/
+
+# system
+*.o
+*.so
+*.a
+*.out
+
+# datasets
+data/
+
+# android
+.gradle/
+local.properties
+
+# cmake additional
+*.cmake
+Makefile
+
+# binaries
+*.exe
+
+# logs
+*.log
