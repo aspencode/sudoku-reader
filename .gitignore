@@ -30,3 +30,13 @@ Makefile
 
 # logs
 *.log
+
+# python
+.venv/
+.uv/
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
