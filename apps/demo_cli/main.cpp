@@ -1,5 +1,9 @@
 #include <iostream>
 #include "types.hpp"
+#include "preprocessing.hpp"
+#include "grid.hpp"
+#include "digits.hpp"
+#include "recognition.hpp"
 
 int main() {
     Cell c;
