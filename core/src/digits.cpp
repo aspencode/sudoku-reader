@@ -1,15 +1,17 @@
 #include "digits.hpp"
 #include <cstdlib>
 
-Cell cleanupCell(Cell cell)
-{
-    return cell;
+void cleanupCell(Cell& cell) {
+    return;
 }
 
 
-Cell recognizeEmpty(Cell cell)
-{
+void recognizeEmpty(Cell& cell) {
     // STUB: temporary logic for pipeline testing
-    cell.value = rand() % 2;
-    return cell;
+    if (rand() % 2 == 0) {
+        cell.value = EMPTY;
+    } else {
+        cell.value = UNKNOWN;
+    }
+    return;
 }

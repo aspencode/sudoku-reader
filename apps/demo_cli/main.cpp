@@ -5,29 +5,28 @@
 #include "digits.hpp"
 #include "recognition.hpp"
 
-Sudoku pipeline(cv::Mat img){
+Sudoku pipeline(const cv::Mat& inputImg) {
+    Sudoku recognizedSudoku;
+    std::array<Cell, 81> cellsArr; 
+    cv::Mat processed;
 
-Sudoku recognizedSudoku;
-std::array<Cell, 81> cellsArr;
+    preprocessing(inputImg, processed);
+    cv::Mat grid = detectGrid(processed);
+    
+    splitGrid(grid, cellsArr);
 
-img = preprocessing(img);
-img = detectGrid(img);
-cellsArr = splitGrid(img);
-for (int i=0;i<81;i++){  
-        cellsArr[i]=cleanupCell(cellsArr[i]);
-        cellsArr[i]=recognizeEmpty(cellsArr[i]);
-        if(!isEmpty(cellsArr[i]))
-            cellsArr[i]=recognizeNumber(cellsArr[i]);        
-}
-for (int i=0;i<9;i++){
-    for (int j=0;j<9;j++)
-    { 
-    recognizedSudoku.values[i][j] = cellsArr[i * 9 + j].value;
+    for (int i = 0; i < 81; i++) {
+        cleanupCell(cellsArr[i]);
+        recognizeEmpty(cellsArr[i]);
+        
+        if (!isKnown(cellsArr[i])) {
+            recognizeNumber(cellsArr[i]);
+        }
+        
+        recognizedSudoku.values[i / 9][i % 9] = cellsArr[i].value;
     }
-}
 
-
-return recognizedSudoku;
+    return recognizedSudoku;
 }
 
 int main() {
@@ -35,7 +34,7 @@ int main() {
     cv::Mat image = cv::imread("../data/test.jpg");
 
     if (image.empty()) {
-        std::cerr << "Error: could not load image\n";
+        std::cerr << "Error: could not load image. Add an image in ../data/test.jpg \n";
         return -1;
     }
     else {

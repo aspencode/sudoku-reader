@@ -3,7 +3,7 @@
 #include "types.hpp"
 
 // Cleans a cell image (noise removal, contrast enhancement)
-Cell cleanupCell(Cell cell);
+void cleanupCell(Cell& cell);
 
 // Detects whether the cell is empty or contains a digit
-Cell recognizeEmpty(Cell cell);
+void recognizeEmpty(Cell& cell);

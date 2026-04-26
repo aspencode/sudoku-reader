@@ -1,9 +1,9 @@
 #include "preprocessing.hpp"
 
-cv::Mat preprocessing(cv::Mat img){
+void preprocessing(const cv::Mat& src, cv::Mat& dst) {
 
-    cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-    cv::GaussianBlur(img, img, cv::Size(3, 3), 0);
+    cv::cvtColor(src, dst, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(dst, dst, cv::Size(3, 3), 0);
 
-    return img;
+    return;
 }
