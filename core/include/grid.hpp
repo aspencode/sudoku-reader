@@ -5,7 +5,7 @@
 
 // 
 // returns image with a cropped out sudoku grid
-cv::Mat detectGrid(cv::Mat img);
+cv::Mat detectGrid(const cv::Mat& img);
 
 // returns arr of 81 cell elements with images of each cell
-std::array<Cell, 81> splitGrid(cv::Mat img);
+void splitGrid(const cv::Mat& img, std::array<Cell, 81>& cells);
