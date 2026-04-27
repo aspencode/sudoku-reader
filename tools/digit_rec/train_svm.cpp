@@ -1,6 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <filesystem>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <chrono>
 #include "hog_utils.hpp"
 #include "split_data.hpp"
@@ -48,7 +50,7 @@ int main(int argc, char **argv)
 
     int nSamples = features.size();
 
-    std::cout << "Wczytano: " << nSamples << " wektorow cech." << std::endl;
+    std::cout << "Wczytano: " << nSamples << " zdjec." << std::endl;
 
     int nFeatures = features[0].size();
     cv::Mat trainData(nSamples, nFeatures, CV_32F);
