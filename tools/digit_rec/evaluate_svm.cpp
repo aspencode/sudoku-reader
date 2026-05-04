@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     fs::path dataFolder = rootDir / "data" / "English" / "Fnt";
 
     fs::path modelFolder = rootDir / "tools" / "digit_rec";
-    fs::path modelPath = modelFolder / "svm_model.xml";
+    fs::path modelPath = modelFolder / "svm_model_chi2.xml";
 
     const double TEST_RATIO = 0.2;
     const unsigned int SEED = 42;
