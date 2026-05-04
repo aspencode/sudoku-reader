@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     std::vector<std::vector<float>> features;
     std::vector<int> labels;
 
-    std::cout << "Wczytywanie danych treningowych..." << std::endl;
+    std::cout << "Loading training data..." << std::endl;
 
     for (int digit = 1; digit <= 9; digit++)
     {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
     int nSamples = features.size();
 
-    std::cout << "Wczytano: " << nSamples << " zdjec." << std::endl;
+    std::cout << "Loaded: " << nSamples << " images." << std::endl;
 
     int nFeatures = features[0].size();
     cv::Mat trainData(nSamples, nFeatures, CV_32F);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     svm->setKernel(cv::ml::SVM::RBF);
     svm->setTermCriteria(cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, 1000, 1e-6));
 
-    std::cout << "Rozpoczynanie treningu..." << std::endl;
+    std::cout << "Starting training..." << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -77,14 +77,14 @@ int main(int argc, char **argv)
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
 
-    std::cout << "Trening trwal: " << std::fixed << std::setprecision(2)
-              << elapsed.count() << " sekund." << std::endl;
+    std::cout << "Training lasted: " << std::fixed << std::setprecision(2)
+              << elapsed.count() << " seconds." << std::endl;
 
     if (!fs::exists(modelFolder))
         fs::create_directories(modelFolder);
 
     svm->save(modelPath.string());
-    std::cout << "Model zapisany w: " << modelPath << std::endl;
+    std::cout << "Model saved in: " << modelPath << std::endl;
 
     return 0;
 }

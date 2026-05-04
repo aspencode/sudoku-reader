@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         if (classTotal > 0)
         {
             double accuracy = (double)classCorrect / classTotal * 100.0;
-            std::cout << "Cyfra " << digit << " (Sample" << folderNum.str() << "): "
+            std::cout << "Digit " << digit << " (Sample" << folderNum.str() << "): "
                       << std::fixed << std::setprecision(2) << accuracy << "% "
                       << "(" << classCorrect << "/" << classTotal << ")" << std::endl;
 
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     {
         double totalAccuracy = (double)predictCorrect / predictTotal * 100.0;
         std::cout << std::endl
-                  << "Calkowita skutecznosc na zbiorze testowym: "
+                  << "Total accuracy on test split: "
                   << std::fixed << std::setprecision(2) << totalAccuracy << "% "
                   << "(" << predictCorrect << "/" << predictTotal << ")" << std::endl;
     }
