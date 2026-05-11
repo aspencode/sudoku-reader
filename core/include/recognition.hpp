@@ -3,4 +3,5 @@
 #include "types.hpp"
 
 // recognize what number a cell contains (value={0-9}, 0 for empty)
-void recognizeNumber(Cell& cell);
+void recognizeNumber(Cell &cell);
+void initRecognition(const std::string &modelPath);

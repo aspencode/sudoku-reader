@@ -30,7 +30,7 @@ Sudoku pipeline(const cv::Mat& inputImg) {
 }
 
 int main() {
-
+    initRecognition(SVM_MODEL_PATH);
     cv::Mat image = cv::imread("../data/test.jpg");
 
     if (image.empty()) {
