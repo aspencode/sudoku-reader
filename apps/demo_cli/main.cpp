@@ -1,18 +1,9 @@
 #include <iostream>
-#include <filesystem>
 #include "types.hpp"
 #include "preprocessing.hpp"
 #include "grid.hpp"
 #include "digits.hpp"
 #include "recognition.hpp"
-
-namespace fs = std::filesystem;
-
-bool isImageFile(const fs::path& path) {
-    std::string ext = path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    return (ext == ".jpg" || ext == ".jpeg" || ext == ".png");
-}
 
 Sudoku pipeline(const cv::Mat& inputImg) {
     Sudoku recognizedSudoku;
@@ -21,6 +12,11 @@ Sudoku pipeline(const cv::Mat& inputImg) {
 
     preprocessing(inputImg, processed);
     cv::Mat grid = detectGrid(processed);
+    
+    if (grid.empty()) {
+        std::cerr << "Error: Could not detect Sudoku grid in the image.\n";
+        return recognizedSudoku; 
+    }
     
     splitGrid(grid, cellsArr);
 
@@ -38,52 +34,33 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     return recognizedSudoku;
 }
 
-
-int main() {
-    std::string input_dir = "../data";
-    std::string output_dir = "../data_results";
-
-    fs::create_directories(output_dir);
-
-    int success = 0;
-    int fail = 0;
-
-    for (const auto& entry : fs::directory_iterator(input_dir)) {
-        if (!entry.is_regular_file() || !isImageFile(entry.path()))
-            continue;
-
-        std::string path = entry.path().string();
-        std::string filename = entry.path().stem().string();
-
-        std::cout << "Processing: " << path << "\n";
-
-        cv::Mat image = cv::imread(path);
-        if (image.empty()) {
-            std::cerr << "Failed to load image\n";
-            fail++;
-            continue;
-        }
-
-        cv::Mat processed;
-        preprocessing(image, processed);
-
-        cv::Mat grid = detectGrid(processed);
-
-        if (grid.empty()) {
-            std::cerr << "Grid detection failed\n";
-            fail++;
-            continue;
-        }
-
-        std::string out_path = output_dir + "/" + filename + "_grid.jpg";
-        cv::imwrite(out_path, grid);
-
-        success++;
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <path_to_sudoku_image>\n";
+        return 1;
     }
 
-    std::cout << "\n=== SUMMARY ===\n";
-    std::cout << "Success: " << success << "\n";
-    std::cout << "Fail:    " << fail << "\n";
+    std::string imagePath = argv[1];
+    cv::Mat image = cv::imread(imagePath);
+
+    if (image.empty()) {
+        std::cerr << "Error: Failed to load image from path: " << imagePath << "\n";
+        return 1;
+    }
+
+    std::cout << "Processing full pipeline for: " << imagePath << "\n";
+    
+
+    Sudoku result = pipeline(image);
+
+    std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            std::cout << result.values[r][c] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "--------------------------------\n";
 
     return 0;
 }
