@@ -13,6 +13,11 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     preprocessing(inputImg, processed);
     cv::Mat grid = detectGrid(processed);
     
+    if (grid.empty()) {
+        std::cerr << "Error: Could not detect Sudoku grid in the image.\n";
+        return recognizedSudoku; 
+    }
+    
     splitGrid(grid, cellsArr);
 
     for (int i = 0; i < 81; i++) {
@@ -29,29 +34,33 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     return recognizedSudoku;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <path_to_sudoku_image>\n";
+        return 1;
+    }
 
-    cv::Mat image = cv::imread("../data/test.jpg");
+    std::string imagePath = argv[1];
+    cv::Mat image = cv::imread(imagePath);
 
     if (image.empty()) {
-        std::cerr << "Error: could not load image. Add an image in ../data/test.jpg \n";
-        return -1;
-    }
-    else {
-        std::cout << "Image loaded successfully\n";
-        std::cout << "Size: " << image.rows << "x" << image.cols << "\n";
-        cv::imshow("cell image", image);
-        Sudoku s;
-        s=pipeline(image);
-            for (int i=0;i<9;i++){
-            for (int j=0;j<9;j++){
-                std::cout<< s.values[i][j]<<"\t";
-            }    
-                std::cout<<"\n";
-            }
+        std::cerr << "Error: Failed to load image from path: " << imagePath << "\n";
+        return 1;
     }
 
+    std::cout << "Processing full pipeline for: " << imagePath << "\n";
+    
 
+    Sudoku result = pipeline(image);
+
+    std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
+    for (int r = 0; r < 9; r++) {
+        for (int c = 0; c < 9; c++) {
+            std::cout << result.values[r][c] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "--------------------------------\n";
 
     return 0;
 }
