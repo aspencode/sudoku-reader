@@ -30,28 +30,33 @@ Sudoku pipeline(const cv::Mat& inputImg) {
 }
 
 int main() {
+    std::vector<cv::String> imagePaths;
+    cv::glob("../data/*.jpg", imagePaths);
+    cv::glob("../data/*.png", imagePaths);
 
-    cv::Mat image = cv::imread("../data/test.jpg");
-
-    if (image.empty()) {
-        std::cerr << "Error: could not load image. Add an image in ../data/test.jpg \n";
+    if (imagePaths.empty()) {
+        std::cerr << "Brak zdjec w folderze data\n";
         return -1;
     }
-    else {
-        std::cout << "Image loaded successfully\n";
+
+    for (const auto& path : imagePaths) {
+        std::cout << "\n=== " << path << " ===\n";
+        cv::Mat image = cv::imread(path);
+        if (image.empty()) {
+            std::cerr << "Nie mozna wczytac: " << path << "\n";
+            continue;
+        }
         std::cout << "Size: " << image.rows << "x" << image.cols << "\n";
-        cv::imshow("cell image", image);
-        Sudoku s;
-        s=pipeline(image);
-            for (int i=0;i<9;i++){
-            for (int j=0;j<9;j++){
-                std::cout<< s.values[i][j]<<"\t";
-            }    
-                std::cout<<"\n";
+
+        Sudoku s = pipeline(image);
+
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                std::cout << s.values[i][j] << "\t";
             }
+            std::cout << "\n";
+        }
     }
-
-
 
     return 0;
 }

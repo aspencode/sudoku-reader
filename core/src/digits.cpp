@@ -1,17 +1,46 @@
 #include "digits.hpp"
-#include <cstdlib>
 
 void cleanupCell(Cell& cell) {
-    return;
+    int margin = 4;
+    int h = cell.image.rows;
+    int w = cell.image.cols;
+    cv::Rect inner(margin, margin, w - 2 * margin, h - 2 * margin);
+    cv::Mat cropped = cell.image(inner);
+
+    cv::Mat binary;
+    cv::adaptiveThreshold(
+        cropped, binary, 255,
+        cv::ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv::THRESH_BINARY_INV,
+        11, 2
+    );
+
+    // Usuñ drobny szum morfologicznym openingiem
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
+    cv::morphologyEx(binary, binary, cv::MORPH_OPEN, kernel);
+
+    cv::resize(binary, cell.image, cv::Size(32, 32));
 }
 
-
 void recognizeEmpty(Cell& cell) {
-    // STUB: temporary logic for pipeline testing
-    if (rand() % 2 == 0) {
-        cell.value = EMPTY;
-    } else {
-        cell.value = UNKNOWN;
+    // ZnajdŸ wszystkie spójne obszary (blobs)
+    cv::Mat labels, stats, centroids;
+    int numLabels = cv::connectedComponentsWithStats(
+        cell.image, labels, stats, centroids
+    );
+
+    // ZnajdŸ najwiêkszy obszar (pomijamy t³o = label 0)
+    int maxArea = 0;
+    for (int i = 1; i < numLabels; i++) {
+        int area = stats.at<int>(i, cv::CC_STAT_AREA);
+        if (area > maxArea) maxArea = area;
     }
-    return;
+
+    // Cyfra zajmuje co najmniej 50 pikseli z 1024 (32x32)
+    // Szum ma ma³e rozproszone blobs
+    std::cout << "row=" << cell.row << " col=" << cell.col << " maxArea=" << maxArea << "\n";
+
+    if (maxArea < 50) {
+        cell.value = EMPTY;
+    }
 }
