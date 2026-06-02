@@ -1,18 +1,9 @@
 #include <iostream>
-#include <filesystem>
 #include "types.hpp"
 #include "preprocessing.hpp"
 #include "grid.hpp"
 #include "digits.hpp"
 #include "recognition.hpp"
-
-namespace fs = std::filesystem;
-
-bool isImageFile(const fs::path& path) {
-    std::string ext = path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    return (ext == ".jpg" || ext == ".jpeg" || ext == ".png");
-}
 
 Sudoku pipeline(const cv::Mat& inputImg) {
     Sudoku recognizedSudoku;
@@ -20,6 +11,12 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     cv::Mat processed;
     preprocessing(inputImg, processed);
     cv::Mat grid = detectGrid(processed);
+    
+    if (grid.empty()) {
+        std::cerr << "Error: Could not detect Sudoku grid in the image.\n";
+        return recognizedSudoku; 
+    }
+    
     splitGrid(grid, cellsArr);
     for (int i = 0; i < 81; i++) {
         cleanupCell(cellsArr[i]);
@@ -32,35 +29,35 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     return recognizedSudoku;
 }
 
-int main() {
-    std::vector<cv::String> imagePaths;
-    cv::glob("C:/Users/micha/OneDrive/Pulpit/doku/sudoku-reader/build/data/*.jpg", imagePaths);
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <path_to_sudoku_image>\n";
+        return 1;
+    }
+
+    std::string imagePath = argv[1];
+    cv::Mat image = cv::imread(imagePath);
+
+    if (image.empty()) {
+        std::cerr << "Error: Failed to load image from path: " << imagePath << "\n";
+        return 1;
+    }
+
+    std::cout << "Processing full pipeline for: " << imagePath << "\n";
     
 
-    if (imagePaths.empty()) {
-        std::cerr << "Brak zdjec w folderze data\n";
-        return -1;
-    }
-
-    for (const auto& path : imagePaths) {
-        std::cout << "\n=== " << path << " ===\n";
-        cv::Mat image = cv::imread(path);
-        if (image.empty()) {
-            std::cerr << "Nie mozna wczytac: " << path << "\n";
-            continue;
+        Sudoku result = pipeline(image);
+    std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
+    for (int r = 0; r < 9; r++) {
+        if (r % 3 == 0 && r != 0)
+            std::cout << "------+-------+------\n";
+        for (int c = 0; c < 9; c++) {
+            if (c % 3 == 0 && c != 0)
+                std::cout << " |";
+            std::cout << " " << result.values[r][c];
         }
-        std::cout << "Size: " << image.rows << "x" << image.cols << "\n";
-        Sudoku s = pipeline(image);
-        for (int i = 0; i < 9; i++) {
-            if (i % 3 == 0 && i != 0)
-                std::cout << "------+-------+------\n";
-            for (int j = 0; j < 9; j++) {
-                if (j % 3 == 0 && j != 0)
-                    std::cout << " |";
-                std::cout << " " << s.values[i][j];
-            }
-            std::cout << "\n";
-        }
+        std::cout << "\n";
     }
+    std::cout << "--------------------------------\n";
     return 0;
 }
