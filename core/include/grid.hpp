@@ -3,7 +3,9 @@
 #include <array>
 #include "types.hpp"
 
-// 
+// helper function used in detectGrid
+std::array<cv::Point2f, 4> orderPoints(const std::vector<cv::Point>& pts);
+
 // returns image with a cropped out sudoku grid
 cv::Mat detectGrid(const cv::Mat& img);
 

@@ -8,7 +8,6 @@ std::array<cv::Point2f, 4> orderPoints(const std::vector<cv::Point>& pts) {
     for (const auto& p : pts)
         ptsf.emplace_back(p.x, p.y);
 
-    // sumy i ró¿nice
     std::vector<float> sum(4), diff(4);
     for (int i = 0; i < 4; i++) {
         sum[i] = ptsf[i].x + ptsf[i].y;

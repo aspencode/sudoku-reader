@@ -4,43 +4,46 @@ void cleanupCell(Cell& cell) {
     int margin = 4;
     int h = cell.image.rows;
     int w = cell.image.cols;
-    cv::Rect inner(margin, margin, w - 2 * margin, h - 2 * margin);
-    cv::Mat cropped = cell.image(inner);
 
+    // 1. Binaryzacja na czystym obrazie — bez bia³ych marginesów
     cv::Mat binary;
     cv::adaptiveThreshold(
-        cropped, binary, 255,
+        cell.image, binary, 255,
         cv::ADAPTIVE_THRESH_GAUSSIAN_C,
         cv::THRESH_BINARY_INV,
         11, 2
     );
 
-    // Usuñ drobny szum morfologicznym openingiem
+    // 2. Marginesy PO binaryzacji — czarne (0 = t³o po BINARY_INV)
+    binary(cv::Rect(0, 0, w, margin)).setTo(0);
+    binary(cv::Rect(0, h - margin, w, margin)).setTo(0);
+    binary(cv::Rect(0, 0, margin, h)).setTo(0);
+    binary(cv::Rect(w - margin, 0, margin, h)).setTo(0);
+
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
     cv::morphologyEx(binary, binary, cv::MORPH_OPEN, kernel);
-
-    cv::resize(binary, cell.image, cv::Size(32, 32));
+    cell.image = binary;
 }
 
 void recognizeEmpty(Cell& cell) {
-    // ZnajdŸ wszystkie spójne obszary (blobs)
     cv::Mat labels, stats, centroids;
     int numLabels = cv::connectedComponentsWithStats(
         cell.image, labels, stats, centroids
     );
 
-    // ZnajdŸ najwiêkszy obszar (pomijamy t³o = label 0)
     int maxArea = 0;
     for (int i = 1; i < numLabels; i++) {
         int area = stats.at<int>(i, cv::CC_STAT_AREA);
         if (area > maxArea) maxArea = area;
     }
 
-    // Cyfra zajmuje co najmniej 50 pikseli z 1024 (32x32)
-    // Szum ma ma³e rozproszone blobs
-    std::cout << "row=" << cell.row << " col=" << cell.col << " maxArea=" << maxArea << "\n";
+    int totalPixels = cell.image.rows * cell.image.cols;
+    double maxAreaRatio = (double)maxArea / totalPixels;
 
-    if (maxArea < 50) {
+    std::cout << "row=" << cell.row << " col=" << cell.col
+        << " maxAreaRatio=" << maxAreaRatio << "\n";
+
+    if (maxAreaRatio < 0.05) {
         cell.value = EMPTY;
     }
 }
