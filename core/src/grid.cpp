@@ -24,7 +24,7 @@ std::array<cv::Point2f, 4> orderPoints(const std::vector<cv::Point>& pts) {
 }
 
 cv::Mat detectGrid(const cv::Mat& img) {
-  
+
     // input picture parameters 
     cv::Scalar mean, stddev;
     cv::meanStdDev(img, mean, stddev);
@@ -53,7 +53,7 @@ cv::Mat detectGrid(const cv::Mat& img) {
     cv::Mat thresh;
     cv::adaptiveThreshold(img, thresh, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, blockSize, C);
 
-   
+
     // find contours
 
     std::vector<std::vector<cv::Point>> contours;
@@ -62,7 +62,7 @@ cv::Mat detectGrid(const cv::Mat& img) {
         contours,
         cv::RETR_EXTERNAL,
         cv::CHAIN_APPROX_SIMPLE
-    );    
+    );
 
     // sort by area (descending)
 
@@ -156,17 +156,20 @@ cv::Mat detectGrid(const cv::Mat& img) {
 
 
 void splitGrid(const cv::Mat& img, std::array<Cell, 81>& cells) {
-    // STUB: temporary logic for pipeline testing
-
-    for (int row = 0; row < 9; row++)
-    {
-        for (int col = 0; col < 9; col++)
-        {   
-            int idx = row * 9 + col;
-            cells[idx].row = row;
-            cells[idx].col = col;
-        }
+    if (img.empty()) {
+        std::cerr << "splitGrid: detectGrid nie znalazl planszy!\n";
+        return;
     }
 
-    return;
+    int cellSize = img.rows / 9;
+    for (int row = 0; row < 9; row++) {
+        for (int col = 0; col < 9; col++) {
+            int idx = row * 9 + col;
+            cv::Rect region(col * cellSize, row * cellSize, cellSize, cellSize);
+            cells[idx].image = img(region).clone();
+            cells[idx].row = row;
+            cells[idx].col = col;
+            cells[idx].value = UNKNOWN;
+        }
+    }
 }

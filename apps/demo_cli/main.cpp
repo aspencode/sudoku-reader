@@ -7,9 +7,8 @@
 
 Sudoku pipeline(const cv::Mat& inputImg) {
     Sudoku recognizedSudoku;
-    std::array<Cell, 81> cellsArr; 
+    std::array<Cell, 81> cellsArr;
     cv::Mat processed;
-
     preprocessing(inputImg, processed);
     cv::Mat grid = detectGrid(processed);
     
@@ -19,18 +18,14 @@ Sudoku pipeline(const cv::Mat& inputImg) {
     }
     
     splitGrid(grid, cellsArr);
-
     for (int i = 0; i < 81; i++) {
         cleanupCell(cellsArr[i]);
         recognizeEmpty(cellsArr[i]);
-        
         if (!isKnown(cellsArr[i])) {
             recognizeNumber(cellsArr[i]);
         }
-        
         recognizedSudoku.values[i / 9][i % 9] = cellsArr[i].value;
     }
-
     return recognizedSudoku;
 }
 
@@ -51,16 +46,18 @@ int main(int argc, char* argv[]) {
     std::cout << "Processing full pipeline for: " << imagePath << "\n";
     
 
-    Sudoku result = pipeline(image);
-
+        Sudoku result = pipeline(image);
     std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
     for (int r = 0; r < 9; r++) {
+        if (r % 3 == 0 && r != 0)
+            std::cout << "------+-------+------\n";
         for (int c = 0; c < 9; c++) {
-            std::cout << result.values[r][c] << " ";
+            if (c % 3 == 0 && c != 0)
+                std::cout << " |";
+            std::cout << " " << result.values[r][c];
         }
         std::cout << "\n";
     }
     std::cout << "--------------------------------\n";
-
     return 0;
 }
