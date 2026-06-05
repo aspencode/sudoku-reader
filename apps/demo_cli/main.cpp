@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    initRecognition(SVM_MODEL_PATH);
     std::string imagePath = argv[1];
     cv::Mat image = cv::imread(imagePath);
 
