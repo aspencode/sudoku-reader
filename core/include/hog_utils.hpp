@@ -15,7 +15,10 @@ std::vector<float> extractHOG(const cv::Mat &img, cv::HOGDescriptor &hog)
 {
     cv::Mat gray, resized;
 
-    cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+    if (img.channels() == 1)
+        gray = img;
+    else
+        cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
     cv::resize(gray, resized, cv::Size(32, 32));
 
     std::vector<float> desc;
