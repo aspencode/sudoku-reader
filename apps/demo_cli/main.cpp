@@ -62,18 +62,5 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "--------------------------------\n";
 
-    // test pojedynczej komórki
-    cv::Mat img = cv::imread("C:\\Users\\micha\\OneDrive\\Pulpit\\rewwre.png", cv::IMREAD_GRAYSCALE);
-    Cell testCell;
-    testCell.image = img;
-    testCell.row = 0;
-    testCell.col = 3;
-    testCell.value = UNKNOWN;
-    recognizeNumber(testCell);
-    std::cout << "Wynik: " << testCell.value << "\n";
-    std::cout << "Wynik: " << testCell.value << "\n";
-    std::cout << "Wynik: " << testCell.value << "\n";
-    std::cout << "Wynik: " << testCell.value << "\n";
-    std::cout << "Wynik: " << testCell.value << "\n";
     return 0;
 }

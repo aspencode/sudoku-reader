@@ -44,8 +44,6 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
     if (maxLabel != -1 && maxAreaRatio >= 0.05) {
 
         // Bounding box jako unia WSZYSTKICH znaczących fragmentów
-        // (próg: >= 8% największego) — naprawia ucięty dziób "4"
-        // który po MORPH_OPEN bywa osobnym, mniejszym komponentem
         int minFragArea = std::max(4, maxArea / 12);
         int unionL = w, unionT = h, unionR = 0, unionB = 0;
 
@@ -87,12 +85,13 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
     }
 
     cell.image = result;
-
+    /*
     std::string base = "C:\\temp\\cell_"
         + std::to_string(cell.row) + "_" + std::to_string(cell.col);
     cv::imwrite(base + "_gray.png", cell.image);
     cv::imwrite(base + "_binary.png", outBinary);
     std::cerr << "cell " << cell.row << "," << cell.col << "\n";
+    */
 }
 
 void recognizeEmpty(Cell& cell, const cv::Mat& binary) {
