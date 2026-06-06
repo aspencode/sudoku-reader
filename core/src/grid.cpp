@@ -136,7 +136,7 @@ cv::Mat detectGrid(const cv::Mat& img) {
 
     std::vector<cv::Point2f> src(rect.begin(), rect.end());
 
-    int side = 288;
+    int side = shortSide;
     std::vector<cv::Point2f> dst = {
         {0, 0},
         {float(side - 1), 0},
