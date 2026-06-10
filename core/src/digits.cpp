@@ -4,7 +4,9 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
     int h = cell.image.rows;
     int w = cell.image.cols;
 
-    int margin = std::max(2, static_cast<int>(std::min(h, w) * 0.12));
+    cv::Mat original = cell.image.clone();
+    
+    int margin = std::max(1, static_cast<int>(std::min(h, w) * 0.15));
 
     int blockSize = static_cast<int>(std::min(h, w) * 0.25);
     if (blockSize < 5)  blockSize = 5;
@@ -22,15 +24,21 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
     outBinary(cv::Rect(0, 0, margin, h)).setTo(0);
     outBinary(cv::Rect(w - margin, 0, margin, h)).setTo(0);
 
-    cv::Mat openKernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
+    int kernelSize = std::max(2, static_cast<int>(std::min(h, w) * 0.06));
+    cv::Mat openKernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernelSize, kernelSize));
     cv::morphologyEx(outBinary, outBinary, cv::MORPH_OPEN, openKernel);
+
+    cv::Mat binaryForDigit = outBinary.clone();
+
+    int dilateSize = std::max(1, static_cast<int>(std::min(h, w) * 0.06));
+    cv::Mat dilateKernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(dilateSize, dilateSize));
+    cv::dilate(outBinary, outBinary, dilateKernel);
 
     cv::Mat labels, stats, centroids;
     int numLabels = cv::connectedComponentsWithStats(
         outBinary, labels, stats, centroids
     );
 
-    // Znajdź największy komponent (potrzebny do oceny pustości)
     int maxArea = 0;
     int maxLabel = -1;
     for (int i = 1; i < numLabels; i++) {
@@ -43,7 +51,6 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
 
     if (maxLabel != -1 && maxAreaRatio >= 0.05) {
 
-        // Bounding box jako unia WSZYSTKICH znaczących fragmentów
         int minFragArea = std::max(4, maxArea / 12);
         int unionL = w, unionT = h, unionR = 0, unionB = 0;
 
@@ -66,7 +73,7 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
         int bw = std::min(w - bx, (unionR - unionL) + 2 * pad);
         int bh = std::min(h - by, (unionB - unionT) + 2 * pad);
 
-        cv::Mat croppedBinary = outBinary(cv::Rect(bx, by, bw, bh)).clone();
+        cv::Mat croppedBinary = binaryForDigit(cv::Rect(bx, by, bw, bh)).clone();
         cv::Mat digitInverted;
         cv::bitwise_not(croppedBinary, digitInverted);
 
@@ -88,9 +95,9 @@ void cleanupCell(Cell& cell, cv::Mat& outBinary) {
     /*
     std::string base = "C:\\temp\\cell_"
         + std::to_string(cell.row) + "_" + std::to_string(cell.col);
-    cv::imwrite(base + "_gray.png", cell.image);
+    cv::imwrite(base + "_original.png", original);
     cv::imwrite(base + "_binary.png", outBinary);
-    std::cerr << "cell " << cell.row << "," << cell.col << "\n";
+    cv::imwrite(base + "_gray.png", cell.image);
     */
 }
 
@@ -105,8 +112,6 @@ void recognizeEmpty(Cell& cell, const cv::Mat& binary) {
         if (area > maxArea) maxArea = area;
     }
     double maxAreaRatio = (double)maxArea / (binary.rows * binary.cols);
-    std::cout << "row=" << cell.row << " col=" << cell.col
-        << " maxAreaRatio=" << maxAreaRatio << "\n";
     if (maxAreaRatio < 0.05) {
         cell.value = EMPTY;
     }
