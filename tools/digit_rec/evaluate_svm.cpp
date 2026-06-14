@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     }
 
     csvFile.close();
-    std::cout << "\nWyniki zapisane do: " << csvPath.string() << std::endl;
+    std::cout << "\nResults saved to: " << csvPath.string() << std::endl;
 
     return 0;
 }
