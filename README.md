@@ -1,5 +1,6 @@
 # Sudoku-reader
 Sudoku Grid Detection and Recognition System.
+
 This project focuses on automated detection, extraction, and recognition of Sudoku puzzles.
 
 ## Dependencies
@@ -9,7 +10,9 @@ This project focuses on automated detection, extraction, and recognition of Sudo
 ### Dependency Installation
 #### Windows
 Install a C++17-compatible compiler.
+
 Install CMake 3.28.3 or newer and add it to the system `PATH`.
+
 Install OpenCV 4.6.0:
 -   Download and extract OpenCV 4.6.0.
 -   Set the `OpenCV_DIR` environment variable to the OpenCV build directory (e.g. `C:\opencv\build`).
