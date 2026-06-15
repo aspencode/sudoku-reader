@@ -83,7 +83,7 @@ Each extracted grid will be compared to the .dat file corresponding to the image
 ./build/apps/run_tests/run_tests --batch <directory>  
 ```
 
-### Supported .dat file format:**
+### Supported .dat file format:
 - It must contain exactly 9 valid rows representing the Sudoku grid.
 - Each valid row must consist of exactly 9 single-digit numbers (0−9).
 - Numbers within a row can be separated by spaces ( ), commas (,), or completely joined together (e.g., 091006000).
