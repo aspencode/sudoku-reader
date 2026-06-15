@@ -60,18 +60,39 @@ wget https://raw.githubusercontent.com/wichtounet/sudoku_dataset/master/datasets
 tar -xjf v2_test.tar.bz2
 ```
 
-## The CLI demo
-This script runs a specified image or batch of images through the entire pipeline and tests the accuracy of the algorithm.
+## Reading the grid from an image
+This application runs the core vision and recognition pipeline to process Sudoku puzzles. It automatically detects the grid, isolates individual cells, recognizes the digits, and exports the final matrix into a production-ready .dat file containing a clean 9×9 grid of numbers.
+
 ``` 
 # single image
-./build/apps/demo_cli/cli <image.jpg>       
-# batch with .dat comparison  
-./build/apps/demo_cli/cli --batch <directory>  
+./build/apps/sudoku_reader/sudoku_reader <image.jpg>       
+# batch   
+./build/apps/sudoku_reader/sudoku_reader --batch <directory>  
 ```
 
-## The grid detection benchmark
-This script tries to find and extract a sudoku grid from all images in a given directory,  and tests the accuracy of the algorithm.
+
+## Running tests
+This script runs a specified image or batch of images through the entire pipeline and tests the accuracy of the algorithm. 
+
+Each extracted grid will be compared to the .dat file corresponding to the image.
+
+``` 
+# single image
+./build/apps/run_tests/run_tests <image.jpg>       
+# batch   
+./build/apps/run_tests/run_tests --batch <directory>  
 ```
-# Usage: ./build/apps/grid_benchmark/grid_benchmark [input_dir] [output_dir]
-./build/apps/grid_benchmark/grid_benchmark ./data/v2_test ./data_results_v2_test
+
+### Supported .dat file format:**
+- It must contain exactly 9 valid rows representing the Sudoku grid.
+- Each valid row must consist of exactly 9 single-digit numbers (0−9).
+- Numbers within a row can be separated by spaces ( ), commas (,), or completely joined together (e.g., 091006000).
+- Automatic filtering: Any line containing characters other than digits, spaces, commas, or carriage returns (\r) is automatically ignored
+
+
+
+## The grid detection benchmark
+This standalone benchmark focuses strictly on the initial computer vision stages. It attempts to locate, deskew, and extract the main 9×9 Sudoku grid from all images in a given directory. Accuracy and amount of positive outcomes and failures is printed out to the console.
+```
+./build/apps/grid_benchmark/grid_benchmark <input_dir> <output_dir>
 ```

@@ -3,6 +3,7 @@ add_library(sudoku_core
     src/grid.cpp
     src/digits.cpp
     src/recognition.cpp
+    src/pipeline.cpp
 )
 
 target_include_directories(sudoku_core PUBLIC include)

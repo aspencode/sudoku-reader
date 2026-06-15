@@ -6,35 +6,15 @@
 #include "grid.hpp"
 #include "digits.hpp"
 #include "recognition.hpp"
+#include "pipeline.hpp"
 
 namespace fs = std::filesystem;
-
-bool pipeline(const cv::Mat& inputImg, std::array<Cell, 81>& cellsArr, Sudoku& recognizedSudoku) {
-    recognizedSudoku = {};
-    cv::Mat processed;
-    preprocessing(inputImg, processed);
-    cv::Mat grid = detectGrid(processed);
-    if (grid.empty()) {
-        std::cerr << "Error: Could not detect Sudoku grid in the image.\n";
-        return false;
-    }
-    splitGrid(grid, cellsArr);
-    for (int i = 0; i < 81; i++) {
-        cv::Mat binary;
-        cleanupCell(cellsArr[i], binary);
-        recognizeEmpty(cellsArr[i], binary);
-        if (!isKnown(cellsArr[i])) {
-            recognizeNumber(cellsArr[i]);
-        }
-        recognizedSudoku.values[i / 9][i % 9] = cellsArr[i].value;
-    }
-    return true;
-}
+const std::string WRONG_CELLS_DIR = "./tmp_wrong_cells";
 
 void printSudoku(const Sudoku& s) {
     for (int r = 0; r < 9; r++) {
         if (r % 3 == 0 && r != 0)
-            std::cout << "------+-------+------\n";
+            std::cout << "-------+-------+------\n";
         for (int c = 0; c < 9; c++) {
             if (c % 3 == 0 && c != 0)
                 std::cout << " |";
@@ -47,13 +27,37 @@ void printSudoku(const Sudoku& s) {
 bool loadDat(const std::string& path, Sudoku& out) {
     std::ifstream f(path);
     if (!f.is_open()) return false;
+
     std::string line;
-    std::getline(f, line);
-    std::getline(f, line);
-    for (int r = 0; r < 9; r++)
-        for (int c = 0; c < 9; c++)
-            if (!(f >> out.values[r][c])) return false;
-    return true;
+    int validRowsCount = 0;
+
+    while (std::getline(f, line) && validRowsCount < 9) {
+        std::vector<int> rowDigits;
+        bool hasInvalidChar = false;
+
+        for (char c : line) {
+            if (c == '\r') {
+                continue;
+            }
+
+            if (std::isdigit(static_cast<unsigned char>(c))) {
+                rowDigits.push_back(c - '0');
+            } 
+            else if (c != ' ' && c != ',') {
+                hasInvalidChar = true;
+                break;
+            }
+        }
+
+        if (!hasInvalidChar && rowDigits.size() == 9) {
+            for (int c = 0; c < 9; c++) {
+                out.values[validRowsCount][c] = rowDigits[c];
+            }
+            validRowsCount++;
+        }
+    }
+
+    return validRowsCount == 9;
 }
 
 struct CompareStats {
@@ -101,7 +105,7 @@ void saveWrongCells(const std::array<Cell, 81>& cells,
     const Sudoku& result,
     const Sudoku& expected,
     const std::string& imgName) {
-    fs::create_directories("C:/temp/wrong");
+    fs::create_directories(WRONG_CELLS_DIR);
     for (int r = 0; r < 9; r++) {
         for (int c = 0; c < 9; c++) {
             int res = result.values[r][c];
@@ -109,7 +113,7 @@ void saveWrongCells(const std::array<Cell, 81>& cells,
             if (res == exp) continue;
             int idx = r * 9 + c;
             if (cells[idx].image.empty()) continue;
-            std::string base = "C:/temp/wrong/" + imgName
+            std::string base = WRONG_CELLS_DIR + "/" + imgName
                 + "_r" + std::to_string(r)
                 + "_c" + std::to_string(c)
                 + "_exp" + std::to_string(exp)
@@ -120,6 +124,7 @@ void saveWrongCells(const std::array<Cell, 81>& cells,
 }
 
 void runBatch(const std::string& dir) {
+    fs::remove_all(WRONG_CELLS_DIR);
     int totalCells = 0, correctCells = 0;
     int totalImages = 0, perfectImages = 0;
     int totalCorrectEmpty = 0, totalWrongEmpty = 0, totalMissedEmpty = 0;
@@ -195,9 +200,13 @@ void runBatch(const std::string& dir) {
             << " (" << (correctCells * 100 / totalCells) << "%)\n";
         std::cout << "===========================\n";
     }
+    if (fs::exists(WRONG_CELLS_DIR) && fs::is_empty(WRONG_CELLS_DIR)) {
+        fs::remove(WRONG_CELLS_DIR);
+    }
 }
 
 int main(int argc, char* argv[]) {
+
     if (argc < 2) {
         std::cout << "Usage:\n";
         std::cout << "  " << argv[0] << " <image.jpg>          -- single image\n";
@@ -209,7 +218,7 @@ int main(int argc, char* argv[]) {
 
     if (std::string(argv[1]) == "--batch") {
         if (argc < 3) {
-            std::cerr << "Error: podaj katalog po --batch\n";
+            std::cerr << "Error: No directory specified\n";
             return 1;
         }
         runBatch(argv[2]);
@@ -230,23 +239,32 @@ int main(int argc, char* argv[]) {
     std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
     printSudoku(result);
     std::cout << "--------------------------------\n";
-    
-    if (!success){
-    std::cerr << "Error: Pipeline failed. Exiting.\n"; return 1;    
-    }
 
     fs::path imgPath(argv[1]);
     std::string datPath = imgPath.parent_path().string()
         + "/" + imgPath.stem().string() + ".dat";
     Sudoku expected = {};
-    if (loadDat(datPath, expected)) {
+    if (loadDat(datPath, expected))
+    {
+        fs::remove_all(WRONG_CELLS_DIR);
         CompareStats s = compareResults(result, expected);
         std::cout << "\n--- EXPECTED ---\n";
         printSudoku(expected);
         std::cout << "----------------\n";
         printStats(s);
-        saveWrongCells(cellsArr, result, expected, imgPath.stem().string());
-    }
 
-    return 0;
+        if (!success)
+            std::cerr << "Error: Pipeline failed. Exiting.\n"; 
+        else if (success)
+        {
+            saveWrongCells(cellsArr, result, expected, imgPath.stem().string());
+            if (fs::exists(WRONG_CELLS_DIR) && fs::is_empty(WRONG_CELLS_DIR))
+                fs::remove(WRONG_CELLS_DIR);
+        }
+    }
+    else 
+        std::cout << "(Missing .dat file - skipping comparison for single image)\n";
+
+    return success ? 0 : 1;
+
 }
