@@ -9,14 +9,14 @@
 
 namespace fs = std::filesystem;
 
-Sudoku pipeline(const cv::Mat& inputImg, std::array<Cell, 81>& cellsArr) {
-    Sudoku recognizedSudoku = {};
+bool pipeline(const cv::Mat& inputImg, std::array<Cell, 81>& cellsArr, Sudoku& recognizedSudoku) {
+    recognizedSudoku = {};
     cv::Mat processed;
     preprocessing(inputImg, processed);
     cv::Mat grid = detectGrid(processed);
     if (grid.empty()) {
         std::cerr << "Error: Could not detect Sudoku grid in the image.\n";
-        return recognizedSudoku;
+        return false;
     }
     splitGrid(grid, cellsArr);
     for (int i = 0; i < 81; i++) {
@@ -28,7 +28,7 @@ Sudoku pipeline(const cv::Mat& inputImg, std::array<Cell, 81>& cellsArr) {
         }
         recognizedSudoku.values[i / 9][i % 9] = cellsArr[i].value;
     }
-    return recognizedSudoku;
+    return true;
 }
 
 void printSudoku(const Sudoku& s) {
@@ -108,6 +108,7 @@ void saveWrongCells(const std::array<Cell, 81>& cells,
             int exp = expected.values[r][c];
             if (res == exp) continue;
             int idx = r * 9 + c;
+            if (cells[idx].image.empty()) continue;
             std::string base = "C:/temp/wrong/" + imgName
                 + "_r" + std::to_string(r)
                 + "_c" + std::to_string(c)
@@ -145,12 +146,23 @@ void runBatch(const std::string& dir) {
 
         std::cout << "\n=== " << entry.path().filename().string() << " ===\n";
         std::array<Cell, 81> cellsArr;
-        Sudoku result = pipeline(image, cellsArr);
+        Sudoku result = {};
+        bool success = pipeline(image, cellsArr, result);
         printSudoku(result);
 
         if (hasDat) {
             CompareStats s = compareResults(result, expected);
             printStats(s);
+            
+            if (!success) {
+                totalCells += 81;
+                totalImages++;
+                totalWrongEmpty += s.wrongEmpty;
+                totalMissedEmpty += s.missedEmpty;
+                totalWrongDigit += s.wrongDigit;
+                continue; 
+            }
+
             saveWrongCells(cellsArr, result, expected, entry.path().stem().string());
             int correct = s.correctEmpty + s.correctDigit;
             totalCells += 81;
@@ -164,7 +176,7 @@ void runBatch(const std::string& dir) {
             totalWrongDigit += s.wrongDigit;
         }
         else {
-            std::cout << "(brak pliku .dat — pomijam porownanie)\n";
+            std::cout << "(Missing .dat file - skipping comparison)\n";
         }
     }
 
@@ -212,11 +224,16 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Processing: " << argv[1] << "\n";
     std::array<Cell, 81> cellsArr;
-    Sudoku result = pipeline(image, cellsArr);
+    Sudoku result = {};
+    bool success = pipeline(image,cellsArr,result);
 
     std::cout << "\n--- RECOGNIZED SUDOKU MATRIX ---\n";
     printSudoku(result);
     std::cout << "--------------------------------\n";
+    
+    if (!success){
+    std::cerr << "Error: Pipeline failed. Exiting.\n"; return 1;    
+    }
 
     fs::path imgPath(argv[1]);
     std::string datPath = imgPath.parent_path().string()
