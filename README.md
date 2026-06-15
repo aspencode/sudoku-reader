@@ -60,6 +60,9 @@ wget https://raw.githubusercontent.com/wichtounet/sudoku_dataset/master/datasets
 tar -xjf v2_test.tar.bz2
 ```
 
+## Changing SVM model
+To change the SVM model used in the cli apps (sudoku_reader, run_tests), you need to change the model path in corresponding CMakeLists.txt in the folder of the app. The models differ in their kernel usage and are available in core/models.
+
 ## Reading the grid from an image
 This application runs the core vision and recognition pipeline to process Sudoku puzzles. It automatically detects the grid, isolates individual cells, recognizes the digits, and exports the final matrix into a production-ready .dat file containing a clean 9×9 grid of numbers.
 
